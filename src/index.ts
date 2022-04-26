@@ -1,11 +1,71 @@
+import { v4 as uuidV4 } from 'uuid';
+
+type Task = { id: string; title: string; completed: boolean; createdAt: Date };
+
+const list = document.querySelector<HTMLUListElement>('#list');
+const form = document.querySelector<HTMLFormElement>('#new-task-form');
+const input = document.querySelector<HTMLInputElement>('#new-task-title');
+
 /**
- * This file is just a silly example to show everything working in the browser.
- * When you're ready to start on your site, clear the file. Happy hacking!
- **/
+ * add new task
+ * @param task Task
+ * @returns true boolean
+ */
+const addListItem = (task: Task): boolean => {
+  const item = document.createElement('li');
+  const label = document.createElement('label');
+  const checkbox = document.createElement('input');
 
-import confetti from 'canvas-confetti';
+  checkbox.addEventListener('change', () => {
+    task.completed = checkbox.checked;
+    saveTasks();
+  });
 
-confetti.create(document.getElementById('canvas') as HTMLCanvasElement, {
-  resize: true,
-  useWorker: true,
-})({ particleCount: 200, spread: 200 });
+  checkbox.type = 'checkbox';
+  label.append(checkbox, task.title);
+  item.append(label);
+  list?.append(item);
+  return true;
+};
+
+//List of task
+const tasks: Task[] = loadTasks();
+
+tasks.forEach(addListItem);
+
+form?.addEventListener('submit', (e) => {
+  e.preventDefault();
+  if (input?.value == '' || input?.value == null) return;
+  const newTask: Task = {
+    id: uuidV4(),
+    title: input.value,
+    completed: false,
+    createdAt: new Date(),
+  };
+
+  //add new Task to taskList
+  tasks.push(newTask);
+  saveTasks();
+  addListItem(newTask);
+  input.value = '';
+});
+
+/**
+ * save tasks
+ *
+ * @returns void
+ */
+function saveTasks(): void {
+  localStorage.setItem('TASKS', JSON.stringify(tasks));
+}
+
+/**
+ * load tasks
+ *
+ * @returns Task[]
+ */
+function loadTasks(): Task[] {
+  let taskJSON = localStorage.getItem('TASKS');
+  if (taskJSON === null) return [];
+  return JSON.parse(taskJSON);
+}
